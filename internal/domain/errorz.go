@@ -12,8 +12,6 @@ const (
 	ErrCodeNoCandidate  ErrorCode = "NO_CANDIDATE"
 	ErrCodeNotFound     ErrorCode = "NOT_FOUND"
 	ErrCodeInvalidInput ErrorCode = "INVALID_INPUT"
-
-	ErrCodeConflict ErrorCode = "СONFLICT"
 )
 
 type DomainError struct {
@@ -25,7 +23,7 @@ func (e *DomainError) Error() string {
 	return fmt.Sprintf("%s: %s", e.Code, e.Message)
 }
 
-func NewDomainError(code ErrorCode, message string) *DomainError {
+func NewError(code ErrorCode, message string) *DomainError {
 	return &DomainError{
 		Code:    code,
 		Message: message,
