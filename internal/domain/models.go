@@ -5,8 +5,8 @@ import "time"
 type PRStatus string
 
 const (
-	OPEN   PRStatus = "OPEN"
-	MERGED PRStatus = "MERGED"
+	StatusOpen   PRStatus = "STATUS_OPEN"
+	StatusMerged PRStatus = "StatusMerged"
 )
 
 type User struct {
