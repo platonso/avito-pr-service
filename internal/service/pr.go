@@ -12,23 +12,23 @@ import (
 )
 
 type PRService struct {
-	log      *slog.Logger
 	prRepo   repository.PRRepository
 	teamRepo repository.TeamRepository
 	userRepo repository.UserRepository
+	log      *slog.Logger
 }
 
 func NewPRService(
-	log *slog.Logger,
 	prRepo repository.PRRepository,
 	teamRepo repository.TeamRepository,
 	userRepo repository.UserRepository,
+	log *slog.Logger,
 ) *PRService {
 	return &PRService{
-		log:      log,
 		prRepo:   prRepo,
 		teamRepo: teamRepo,
 		userRepo: userRepo,
+		log:      log,
 	}
 }
 
@@ -60,7 +60,7 @@ func (s *PRService) CreatePullRequest(ctx context.Context, prID, prName, authorI
 		Name:              prName,
 		AuthorID:          authorID,
 		Status:            domain.StatusOpen,
-		CreatedAt:         &prCreatedTime,
+		CreatedAt:         prCreatedTime,
 		AssignedReviewers: reviewers,
 	}
 
@@ -77,7 +77,7 @@ func (s *PRService) CreatePullRequest(ctx context.Context, prID, prName, authorI
 	return pr, nil
 }
 
-func (s *PRService) MergePullRequest(ctx context.Context, prID string) (*domain.PullRequest, error) {
+func (s *PRService) MergePR(ctx context.Context, prID string) (*domain.PullRequest, error) {
 	// Get PR with reviewers
 	pr, err := s.prRepo.GetByID(ctx, prID)
 	if err != nil {

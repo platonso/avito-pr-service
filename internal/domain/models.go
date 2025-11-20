@@ -5,8 +5,8 @@ import "time"
 type PRStatus string
 
 const (
-	StatusOpen   PRStatus = "STATUS_OPEN"
-	StatusMerged PRStatus = "StatusMerged"
+	StatusOpen   PRStatus = "OPEN"
+	StatusMerged PRStatus = "MERGED"
 )
 
 type User struct {
@@ -33,8 +33,8 @@ type PullRequest struct {
 	AuthorID          string     `json:"author_id"`
 	Status            PRStatus   `json:"status"`
 	AssignedReviewers []string   `json:"assigned_reviewers"`
-	CreatedAt         *time.Time `json:"createdAt"`
-	MergedAt          *time.Time `json:"mergedAt"`
+	CreatedAt         time.Time  `json:"createdAt"`
+	MergedAt          *time.Time `json:"mergedAt,omitempty"`
 }
 
 type PullRequestShort struct {

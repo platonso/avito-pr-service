@@ -10,17 +10,17 @@ import (
 )
 
 type UserService struct {
-	log      *slog.Logger
 	userRepo repository.UserRepository
+	log      *slog.Logger
 }
 
 func NewUserService(
-	log *slog.Logger,
 	userRepo repository.UserRepository,
+	log *slog.Logger,
 ) *UserService {
 	return &UserService{
-		log:      log,
 		userRepo: userRepo,
+		log:      log,
 	}
 }
 
