@@ -21,13 +21,10 @@ type postgres struct {
 func New() (*Config, error) {
 	var cfg Config
 
-	// Читаем .env
-	// Если не удалось, то пробуем ReadEnv
 	if err := cleanenv.ReadConfig(".env", &cfg); err == nil {
 		return &cfg, nil
 	}
 
-	// Читаем из переменных окружения
 	if err := cleanenv.ReadEnv(&cfg); err != nil {
 		return nil, err
 	}
