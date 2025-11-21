@@ -49,6 +49,7 @@ func (r *userRepository) GetPRsByUserID(ctx context.Context, userID string) ([]d
 	FROM pull_requests pr
 	JOIN pr_reviewers prr ON pr.pull_request_id = prr.pr_id
 	WHERE prr.reviewer_id = $1
+	ORDER BY pr.created_at DESC
 `
 	rows, err := r.db.Query(ctx, query, userID)
 	if err != nil {

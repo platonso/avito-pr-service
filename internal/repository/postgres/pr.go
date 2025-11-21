@@ -67,10 +67,10 @@ func (r *prRepository) Merge(ctx context.Context, prID string, mergedAt time.Tim
 	// Update merge status and date
 	query := `
 		UPDATE pull_requests 
-		SET status = 'StatusMerged', merged_at = COALESCE(merged_at, $1)
-		WHERE pull_request_id = $2 AND status != 'StatusMerged'
+		SET status = $1, merged_at = COALESCE(merged_at, $2)
+		WHERE pull_request_id = $3 AND status != $1
 `
-	res, err := r.db.Exec(ctx, query, mergedAt, prID)
+	res, err := r.db.Exec(ctx, query, string(domain.StatusMerged), mergedAt, prID)
 	if err != nil {
 		return fmt.Errorf("failed to update merge status and date: %w", err)
 	}

@@ -75,7 +75,10 @@ func (r *teamRepository) GetByName(ctx context.Context, teamName string) (*domai
 		return nil, repository.ErrTeamNotFound
 	}
 
-	var team domain.Team
+	team := &domain.Team{
+		Name:    teamName,
+		Members: make([]domain.TeamMember, 0),
+	}
 	query := `
 		SELECT user_id, username, is_active 
 		FROM users
@@ -101,7 +104,7 @@ func (r *teamRepository) GetByName(ctx context.Context, teamName string) (*domai
 		return nil, fmt.Errorf("error iterating team member: %w", err)
 	}
 
-	return &team, nil
+	return team, nil
 }
 
 func (r *teamRepository) GetByUserID(ctx context.Context, userID string) (*domain.Team, error) {
