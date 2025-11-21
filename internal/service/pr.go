@@ -33,6 +33,14 @@ func NewPRService(
 }
 
 func (s *PRService) CreatePullRequest(ctx context.Context, prID, prName, authorID string) (*domain.PullRequest, error) {
+	// Check author existence
+	_, err := s.userRepo.GetByID(ctx, authorID)
+	if err != nil {
+		if errors.Is(err, repository.ErrUserNotFound) {
+			s.log.Warn("PR author not found", slog.String("author_id", authorID))
+			return nil, domain.NewError(domain.ErrCodeNotFound, "resource not found")
+		}
+	}
 	// Get author's team
 	team, err := s.teamRepo.GetByUserID(ctx, authorID)
 	if err != nil {
