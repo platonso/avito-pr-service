@@ -9,6 +9,9 @@ import (
 	"github.com/jackc/pgx/v5/stdlib"
 	"github.com/platonso/avito-pr-service/internal/config"
 	"github.com/platonso/avito-pr-service/internal/db"
+	"github.com/platonso/avito-pr-service/internal/repository/postgres"
+	"github.com/platonso/avito-pr-service/internal/service"
+	"github.com/platonso/avito-pr-service/internal/transport/handlers"
 	"log/slog"
 )
 
@@ -33,7 +36,7 @@ func New(ctx context.Context, cfg *config.Config, l *slog.Logger) (*App, error) 
 		return nil, err
 	}
 
-	a.initGin()
+	a.setupRoutes()
 
 	return a, nil
 }
@@ -54,11 +57,34 @@ func (a *App) migrateDB() error {
 	return nil
 }
 
-func (a *App) initGin() {
+func (a *App) setupRoutes() {
+	teamRepo := postgres.NewTeamRepository(a.dbPool)
+	userRepo := postgres.NewUserRepository(a.dbPool)
+	prRepo := postgres.NewPRRepository(a.dbPool)
+
+	teamService := service.NewTeamService(teamRepo, a.l)
+	userService := service.NewUserService(userRepo, a.l)
+	prService := service.NewPRService(prRepo, teamRepo, userRepo, a.l)
+
+	teamHandler := handlers.NewTeamHandler(teamService, a.l)
+	userHandler := handlers.NewUserHandler(userService, a.l)
+	prHandler := handlers.NewPRHandler(prService, a.l)
+
 	a.router = gin.Default()
 
-	a.router.Use(gin.Logger())
-	a.router.Use(gin.Recovery())
+	team := a.router.Group("/team")
+	team.POST("/add", teamHandler.CreateTeam)
+	team.GET("/get", teamHandler.GetTeam)
+
+	users := a.router.Group("/users")
+	users.POST("/setIsActive", userHandler.SetIsActive)
+	users.GET("/getReview", userHandler.GetReview)
+
+	pullRequest := a.router.Group("/pullRequest")
+	pullRequest.POST("/create", prHandler.CreatePR)
+	pullRequest.POST("/merge", prHandler.MergePR)
+	pullRequest.POST("/reassign", prHandler.ReassignReviewer)
+
 }
 
 func (a *App) Run() error {

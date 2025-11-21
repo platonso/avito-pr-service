@@ -28,7 +28,6 @@ func main() {
 		os.Exit(1)
 	}
 
-	// TODO in goroutine
 	if err = a.Run(); err != nil {
 		logger.Error("failed to run server", slog.Any("error", err))
 	}
