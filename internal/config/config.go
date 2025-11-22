@@ -11,10 +11,10 @@ type Config struct {
 }
 
 type postgres struct {
-	User     string `env:"POSTGRES_USER" env-required:"true"`
-	Password string `env:"POSTGRES_PASSWORD" env-required:"true"`
-	DB       string `env:"POSTGRES_DB" env-required:"true"`
-	Host     string `env:"POSTGRES_HOST" env-required:"true"`
+	User     string `env:"POSTGRES_USER" env-default:"postgres"`
+	Password string `env:"POSTGRES_PASSWORD" env-default:"postgres"`
+	DB       string `env:"POSTGRES_DB" env-default:"avito-pr-db"`
+	Host     string `env:"POSTGRES_HOST" env-default:"postgres"`
 	Port     string `env:"POSTGRES_PORT" env-default:"5432"`
 }
 
