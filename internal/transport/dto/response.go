@@ -8,6 +8,11 @@ import (
 	"net/http"
 )
 
+// User response DTO
+type SetIsActiveResp struct {
+	User *domain.User `json:"user"`
+}
+
 // Pull request response DTO
 type PRResp struct {
 	PR *domain.PullRequest `json:"pr"`
