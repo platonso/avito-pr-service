@@ -256,3 +256,21 @@ func (s *PRService) filterOutReviewers(candidates []string, existingReviewers []
 	}
 	return result
 }
+
+func (s *PRService) GetReviewerAssignmentsStats(ctx context.Context) ([]domain.ReviewerStat, error) {
+	stats, err := s.prRepo.GetReviewerStats(ctx)
+	if err != nil {
+		s.log.Error(err.Error())
+		return nil, fmt.Errorf("failed to get reviewer assignments stats: %w", err)
+	}
+	return stats, nil
+}
+
+func (s *PRService) GetPRStats(ctx context.Context) ([]domain.PullRequestStat, error) {
+	stats, err := s.prRepo.GetRRStats(ctx)
+	if err != nil {
+		s.log.Error(err.Error())
+		return nil, fmt.Errorf("failed to get PR stats: %w", err)
+	}
+	return stats, nil
+}

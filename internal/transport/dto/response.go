@@ -23,6 +23,15 @@ type ReassignPRResp struct {
 	ReplacedBy string              `json:"replaced_by"`
 }
 
+// Statistics response DTO
+type ReviewerStatsResp struct {
+	Stats []domain.ReviewerStat `json:"stats"`
+}
+
+type PRStatsResp struct {
+	Stats []domain.PullRequestStat `json:"stats"`
+}
+
 // Error response DTO
 type ErrorResponse struct {
 	Error struct {

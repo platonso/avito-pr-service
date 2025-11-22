@@ -70,3 +70,23 @@ func (h *PRHandler) ReassignReviewer(c *gin.Context) {
 		ReplacedBy: newReviewerID,
 	})
 }
+
+func (h *PRHandler) GetReviewerStats(c *gin.Context) {
+	stats, err := h.prService.GetReviewerAssignmentsStats(c.Request.Context())
+	if err != nil {
+		dto.WriteJSONError(c, h.logger, err)
+		return
+	}
+
+	c.JSON(http.StatusOK, dto.ReviewerStatsResp{Stats: stats})
+}
+
+func (h *PRHandler) GetPRStats(c *gin.Context) {
+	stats, err := h.prService.GetPRStats(c.Request.Context())
+	if err != nil {
+		dto.WriteJSONError(c, h.logger, err)
+		return
+	}
+
+	c.JSON(http.StatusOK, dto.PRStatsResp{Stats: stats})
+}

@@ -26,4 +26,6 @@ type PRRepository interface {
 	GetReviewersIDs(ctx context.Context, prID string) ([]string, error)
 	ChangeReviewer(ctx context.Context, prID, oldReviewerID, newReviewerID string) error
 	Exists(ctx context.Context, prID string) (bool, error)
+	GetReviewerStats(ctx context.Context) ([]domain.ReviewerStat, error)
+	GetRRStats(ctx context.Context) ([]domain.PullRequestStat, error)
 }

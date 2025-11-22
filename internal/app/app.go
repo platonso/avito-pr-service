@@ -85,6 +85,10 @@ func (a *App) setupRoutes() {
 	pullRequest.POST("/merge", prHandler.MergePR)
 	pullRequest.POST("/reassign", prHandler.ReassignReviewer)
 
+	stats := a.router.Group("/stats")
+	stats.GET("/reviewers", prHandler.GetReviewerStats)
+	stats.GET("/pullRequests", prHandler.GetPRStats)
+
 }
 
 func (a *App) Run() error {

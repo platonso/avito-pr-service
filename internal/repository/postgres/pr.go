@@ -166,6 +166,73 @@ func (r *prRepository) Exists(ctx context.Context, prID string) (bool, error) {
 	return exists, nil
 }
 
+func (r *prRepository) GetReviewerStats(ctx context.Context) ([]domain.ReviewerStat, error) {
+	query := `
+    SELECT pr.reviewer_id, COUNT(*) as assignment_count
+    FROM pr_reviewers pr
+    JOIN users u ON pr.reviewer_id = u.user_id
+    GROUP BY pr.reviewer_id
+    ORDER BY assignment_count DESC
+  `
+	rows, err := r.db.Query(ctx, query)
+	if err != nil {
+		return nil, fmt.Errorf("failed to get reviewer assignments stats: %w", err)
+	}
+	defer rows.Close()
+
+	var stats []domain.ReviewerStat
+	for rows.Next() {
+		var stat domain.ReviewerStat
+		err := rows.Scan(&stat.UserID, &stat.AssignedCount)
+		if err != nil {
+			return nil, fmt.Errorf("failed to scan reviewer stats: %w", err)
+		}
+		stats = append(stats, stat)
+	}
+
+	if err = rows.Err(); err != nil {
+		return nil, fmt.Errorf("error iterating reviewer stats: %w", err)
+	}
+
+	return stats, nil
+}
+
+func (r *prRepository) GetRRStats(ctx context.Context) ([]domain.PullRequestStat, error) {
+	query := `
+    SELECT 
+      pr.pull_request_id,
+      pr.pull_request_name,
+      pr.author_id,
+      pr.status,
+      COALESCE(COUNT(prr.reviewer_id), 0) as reviewer_count
+    FROM pull_requests pr
+    LEFT JOIN pr_reviewers prr ON pr.pull_request_id = prr.pr_id
+    GROUP BY pr.pull_request_id, pr.pull_request_name, pr.author_id, pr.status
+    ORDER BY pr.pull_request_id
+  `
+	rows, err := r.db.Query(ctx, query)
+	if err != nil {
+		return nil, fmt.Errorf("failed to get PR stats: %w", err)
+	}
+	defer rows.Close()
+
+	var stats []domain.PullRequestStat
+	for rows.Next() {
+		var stat domain.PullRequestStat
+		err := rows.Scan(&stat.PullRequestID, &stat.PullRequestName, &stat.AuthorID, &stat.Status, &stat.ReviewerCount)
+		if err != nil {
+			return nil, fmt.Errorf("failed to scan PR stats: %w", err)
+		}
+		stats = append(stats, stat)
+	}
+
+	if err = rows.Err(); err != nil {
+		return nil, fmt.Errorf("error iterating PR stats: %w", err)
+	}
+
+	return stats, nil
+}
+
 func isDuplicatePRKeyError(err error) bool {
 	var pgErr *pgconn.PgError
 	if errors.As(err, &pgErr) {
