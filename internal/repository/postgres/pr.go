@@ -139,7 +139,6 @@ func (r *prRepository) GetReviewersIDs(ctx context.Context, prID string) ([]stri
 }
 
 func (r *prRepository) ChangeReviewer(ctx context.Context, prID, oldReviewerID, newReviewerID string) error {
-
 	query := `
 			UPDATE pr_reviewers 
 			SET reviewer_id = $1 

@@ -207,8 +207,7 @@ func (s *Service) getActiveTeamMembers(ctx context.Context, teamName string, exc
 	return activeMembers, nil
 }
 
-func (s *Service) selectRandomReviewers(candidates []string, max int) []string {
-
+func (s *Service) selectRandomReviewers(candidates []string, maxCount int) []string {
 	if len(candidates) == 0 {
 		return []string{}
 	}
@@ -219,8 +218,8 @@ func (s *Service) selectRandomReviewers(candidates []string, max int) []string {
 		shuffled[i], shuffled[j] = shuffled[j], shuffled[i]
 	})
 
-	if len(shuffled) > max {
-		return shuffled[:max]
+	if len(shuffled) > maxCount {
+		return shuffled[:maxCount]
 	}
 	return shuffled
 }

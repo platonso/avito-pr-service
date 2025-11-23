@@ -125,16 +125,17 @@ func TestService_CreateTeam(t *testing.T) {
 
 			service := NewService(teamRepo, getTestLogger())
 			err := service.CreateTeam(context.Background(), tt.team)
-			if tt.expectedError != nil {
+			switch {
+			case tt.expectedError != nil:
 				require.Error(t, err)
 				var domainErr *domain.Error
 				require.True(t, errors.As(err, &domainErr))
 				assert.Equal(t, tt.expectedError.Code, domainErr.Code)
 				assert.Equal(t, tt.expectedError.Message, domainErr.Message)
-			} else if tt.name == "repository error" {
+			case tt.name == "repository error":
 				require.Error(t, err)
 				assert.Contains(t, err.Error(), "failed to create team")
-			} else {
+			default:
 				require.NoError(t, err)
 			}
 		})
@@ -200,17 +201,20 @@ func TestService_GetTeam(t *testing.T) {
 			service := NewService(teamRepo, getTestLogger())
 			result, err := service.GetTeam(context.Background(), tt.teamName)
 
-			if tt.expectedError != nil {
+			switch {
+			case tt.expectedError != nil:
 				require.Error(t, err)
 				var domainErr *domain.Error
 				require.True(t, errors.As(err, &domainErr))
 				assert.Equal(t, tt.expectedError.Code, domainErr.Code)
 				assert.Nil(t, result)
-			} else if tt.name == "repository error" {
+
+			case tt.name == "repository error":
 				require.Error(t, err)
 				assert.Contains(t, err.Error(), "failed to get team")
 				assert.Nil(t, result)
-			} else {
+
+			default:
 				require.NoError(t, err)
 				if tt.validateResult != nil {
 					tt.validateResult(t, result)

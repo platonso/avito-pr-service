@@ -147,16 +147,19 @@ func TestService_SetUserIsActive(t *testing.T) {
 			service := NewService(userRepo, getTestLogger())
 			result, err := service.SetUserIsActive(context.Background(), tt.userID, tt.isActive)
 
-			if tt.expectedError != nil {
+			switch {
+			case tt.expectedError != nil:
 				require.Error(t, err)
 				var domainErr *domain.Error
 				require.True(t, errors.As(err, &domainErr))
 				assert.Equal(t, tt.expectedError.Code, domainErr.Code)
 				assert.Nil(t, result)
-			} else if tt.name == "repository error on SetIsActive" || tt.name == "repository error on GetByID" {
+
+			case tt.name == "repository error on SetIsActive" || tt.name == "repository error on GetByID":
 				require.Error(t, err)
 				assert.Nil(t, result)
-			} else {
+
+			default:
 				require.NoError(t, err)
 				if tt.validateResult != nil {
 					tt.validateResult(t, result)
@@ -279,16 +282,19 @@ func TestService_GetPRsByUserID(t *testing.T) {
 			service := NewService(userRepo, getTestLogger())
 			result, err := service.GetPRsByUserID(context.Background(), tt.userID)
 
-			if tt.expectedError != nil {
+			switch {
+			case tt.expectedError != nil:
 				require.Error(t, err)
 				var domainErr *domain.Error
 				require.True(t, errors.As(err, &domainErr))
 				assert.Equal(t, tt.expectedError.Code, domainErr.Code)
 				assert.Nil(t, result)
-			} else if tt.name == "repository error on GetByID" || tt.name == "repository error on GetPRsByUserID" {
+
+			case tt.name == "repository error on GetByID" || tt.name == "repository error on GetPRsByUserID":
 				require.Error(t, err)
 				assert.Nil(t, result)
-			} else {
+
+			default:
 				require.NoError(t, err)
 				if tt.validateResult != nil {
 					tt.validateResult(t, result)
