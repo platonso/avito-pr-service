@@ -11,7 +11,10 @@ import (
 	"github.com/platonso/avito-pr-service/internal/config"
 	"github.com/platonso/avito-pr-service/internal/db"
 	"github.com/platonso/avito-pr-service/internal/repository/postgres"
-	"github.com/platonso/avito-pr-service/internal/service"
+	"github.com/platonso/avito-pr-service/internal/service/pr"
+	"github.com/platonso/avito-pr-service/internal/service/stats"
+	"github.com/platonso/avito-pr-service/internal/service/team"
+	"github.com/platonso/avito-pr-service/internal/service/user"
 	"github.com/platonso/avito-pr-service/internal/transport/handlers"
 	"log/slog"
 	"net/http"
@@ -72,20 +75,22 @@ func (a *App) setupRoutes() *gin.Engine {
 	userRepo := postgres.NewUserRepository(a.dbPool)
 	prRepo := postgres.NewPRRepository(a.dbPool)
 
-	teamService := service.NewTeamService(teamRepo, a.l)
-	userService := service.NewUserService(userRepo, a.l)
-	prService := service.NewPRService(prRepo, teamRepo, userRepo, a.l)
+	teamService := team.NewService(teamRepo, a.l)
+	userService := user.NewService(userRepo, a.l)
+	prService := pr.NewService(prRepo, teamRepo, userRepo, a.l)
+	statsService := stats.NewService(prRepo, a.l)
 
 	teamHandler := handlers.NewTeamHandler(teamService, a.l)
 	userHandler := handlers.NewUserHandler(userService, a.l)
 	prHandler := handlers.NewPRHandler(prService, a.l)
+	statsHandler := handlers.NewStatsHandler(statsService, a.l)
 
 	router := gin.New()
 	router.Use(gin.Recovery())
 
-	team := router.Group("/team")
-	team.POST("/add", teamHandler.CreateTeam)
-	team.GET("/get", teamHandler.GetTeam)
+	teams := router.Group("/team")
+	teams.POST("/add", teamHandler.CreateTeam)
+	teams.GET("/get", teamHandler.GetTeam)
 
 	users := router.Group("/users")
 	users.POST("/setIsActive", userHandler.SetIsActive)
@@ -96,9 +101,9 @@ func (a *App) setupRoutes() *gin.Engine {
 	pullRequest.POST("/merge", prHandler.MergePR)
 	pullRequest.POST("/reassign", prHandler.ReassignReviewer)
 
-	stats := router.Group("/stats")
-	stats.GET("/reviewers", prHandler.GetReviewerStats)
-	stats.GET("/pullRequests", prHandler.GetPRStats)
+	stat := router.Group("/stats")
+	stat.GET("/reviewers", statsHandler.GetReviewerStats)
+	stat.GET("/pullRequests", statsHandler.GetPRStats)
 
 	return router
 }

@@ -1,4 +1,4 @@
-package service
+package pr
 
 import (
 	"context"
@@ -11,20 +11,20 @@ import (
 	"time"
 )
 
-type PRService struct {
+type Service struct {
 	prRepo   repository.PRRepository
 	teamRepo repository.TeamRepository
 	userRepo repository.UserRepository
 	log      *slog.Logger
 }
 
-func NewPRService(
+func NewService(
 	prRepo repository.PRRepository,
 	teamRepo repository.TeamRepository,
 	userRepo repository.UserRepository,
 	log *slog.Logger,
-) *PRService {
-	return &PRService{
+) *Service {
+	return &Service{
 		prRepo:   prRepo,
 		teamRepo: teamRepo,
 		userRepo: userRepo,
@@ -32,7 +32,7 @@ func NewPRService(
 	}
 }
 
-func (s *PRService) CreatePullRequest(ctx context.Context, prID, prName, authorID string) (*domain.PullRequest, error) {
+func (s *Service) CreatePullRequest(ctx context.Context, prID, prName, authorID string) (*domain.PullRequest, error) {
 	// Check author existence
 	_, err := s.userRepo.GetByID(ctx, authorID)
 	if err != nil {
@@ -85,7 +85,7 @@ func (s *PRService) CreatePullRequest(ctx context.Context, prID, prName, authorI
 	return pr, nil
 }
 
-func (s *PRService) MergePR(ctx context.Context, prID string) (*domain.PullRequest, error) {
+func (s *Service) MergePR(ctx context.Context, prID string) (*domain.PullRequest, error) {
 	// Get PR with reviewers
 	pr, err := s.prRepo.GetByID(ctx, prID)
 	if err != nil {
@@ -117,7 +117,7 @@ func (s *PRService) MergePR(ctx context.Context, prID string) (*domain.PullReque
 	return pr, nil
 }
 
-func (s *PRService) ReassignReviewer(ctx context.Context, prID, oldReviewerID string) (*domain.PullRequest, string, error) {
+func (s *Service) ReassignReviewer(ctx context.Context, prID, oldReviewerID string) (*domain.PullRequest, string, error) {
 	// Get PR with reviewers
 	pr, err := s.prRepo.GetByID(ctx, prID)
 	if err != nil {
@@ -186,7 +186,7 @@ func (s *PRService) ReassignReviewer(ctx context.Context, prID, oldReviewerID st
 	return pr, newReviewerID, nil
 }
 
-func (s *PRService) getActiveTeamMembers(ctx context.Context, teamName string, excludeUserIDs ...string) ([]string, error) {
+func (s *Service) getActiveTeamMembers(ctx context.Context, teamName string, excludeUserIDs ...string) ([]string, error) {
 	team, err := s.teamRepo.GetByName(ctx, teamName)
 	if err != nil {
 		return nil, err
@@ -207,7 +207,7 @@ func (s *PRService) getActiveTeamMembers(ctx context.Context, teamName string, e
 	return activeMembers, nil
 }
 
-func (s *PRService) selectRandomReviewers(candidates []string, max int) []string {
+func (s *Service) selectRandomReviewers(candidates []string, max int) []string {
 
 	if len(candidates) == 0 {
 		return []string{}
@@ -225,14 +225,14 @@ func (s *PRService) selectRandomReviewers(candidates []string, max int) []string
 	return shuffled
 }
 
-func (s *PRService) selectRandomReviewer(candidates []string) string {
+func (s *Service) selectRandomReviewer(candidates []string) string {
 	if len(candidates) == 0 {
 		return ""
 	}
 	return candidates[rand.Intn(len(candidates))]
 }
 
-func (s *PRService) containsReviewer(reviewers []string, reviewerID string) bool {
+func (s *Service) containsReviewer(reviewers []string, reviewerID string) bool {
 	for _, id := range reviewers {
 		if id == reviewerID {
 			return true
@@ -242,7 +242,7 @@ func (s *PRService) containsReviewer(reviewers []string, reviewerID string) bool
 }
 
 // Exclude assigned reviewers
-func (s *PRService) filterOutReviewers(candidates []string, existingReviewers []string) []string {
+func (s *Service) filterOutReviewers(candidates []string, existingReviewers []string) []string {
 	existingSet := make(map[string]bool)
 	for _, id := range existingReviewers {
 		existingSet[id] = true
@@ -255,32 +255,4 @@ func (s *PRService) filterOutReviewers(candidates []string, existingReviewers []
 		}
 	}
 	return result
-}
-
-func (s *PRService) GetReviewerAssignmentsStats(ctx context.Context) ([]domain.ReviewerStat, error) {
-	stats, err := s.prRepo.GetReviewerStats(ctx)
-	if err != nil {
-		s.log.Error(err.Error())
-		return nil, fmt.Errorf("failed to get reviewer assignments stats: %w", err)
-	}
-
-	if stats == nil {
-		return []domain.ReviewerStat{}, err
-	}
-
-	return stats, nil
-}
-
-func (s *PRService) GetPRStats(ctx context.Context) ([]domain.PullRequestStat, error) {
-	stats, err := s.prRepo.GetRRStats(ctx)
-	if err != nil {
-		s.log.Error(err.Error())
-		return nil, fmt.Errorf("failed to get PR stats: %w", err)
-	}
-
-	if stats == nil {
-		return []domain.PullRequestStat{}, err
-	}
-
-	return stats, nil
 }

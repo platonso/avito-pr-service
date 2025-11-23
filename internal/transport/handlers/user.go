@@ -3,19 +3,19 @@ package handlers
 import (
 	"github.com/gin-gonic/gin"
 	"github.com/platonso/avito-pr-service/internal/domain"
-	"github.com/platonso/avito-pr-service/internal/service"
+	"github.com/platonso/avito-pr-service/internal/service/user"
 	"github.com/platonso/avito-pr-service/internal/transport/dto"
 	"log/slog"
 	"net/http"
 )
 
 type UserHandler struct {
-	userService *service.UserService
+	userService *user.Service
 	logger      *slog.Logger
 }
 
 func NewUserHandler(
-	userService *service.UserService,
+	userService *user.Service,
 	logger *slog.Logger,
 ) *UserHandler {
 	return &UserHandler{

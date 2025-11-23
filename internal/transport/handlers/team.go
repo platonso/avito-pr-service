@@ -3,19 +3,19 @@ package handlers
 import (
 	"github.com/gin-gonic/gin"
 	"github.com/platonso/avito-pr-service/internal/domain"
-	"github.com/platonso/avito-pr-service/internal/service"
+	"github.com/platonso/avito-pr-service/internal/service/team"
 	"github.com/platonso/avito-pr-service/internal/transport/dto"
 	"log/slog"
 	"net/http"
 )
 
 type TeamHandler struct {
-	teamService *service.TeamService
+	teamService *team.Service
 	logger      *slog.Logger
 }
 
 func NewTeamHandler(
-	teamService *service.TeamService,
+	teamService *team.Service,
 	logger *slog.Logger,
 ) *TeamHandler {
 	return &TeamHandler{
@@ -25,18 +25,18 @@ func NewTeamHandler(
 }
 
 func (h *TeamHandler) CreateTeam(c *gin.Context) {
-	var team domain.Team
-	if !dto.BindJSON(c, h.logger, &team) {
+	var t domain.Team
+	if !dto.BindJSON(c, h.logger, &t) {
 		return
 	}
 
-	if err := h.teamService.CreateTeam(c.Request.Context(), &team); err != nil {
+	if err := h.teamService.CreateTeam(c.Request.Context(), &t); err != nil {
 		dto.WriteJSONError(c, h.logger, err)
 		return
 	}
 
 	c.JSON(http.StatusCreated, gin.H{
-		"team": team,
+		"team": t,
 	})
 }
 
@@ -47,11 +47,11 @@ func (h *TeamHandler) GetTeam(c *gin.Context) {
 		return
 	}
 
-	team, err := h.teamService.GetTeam(c.Request.Context(), teamName)
+	t, err := h.teamService.GetTeam(c.Request.Context(), teamName)
 	if err != nil {
 		dto.WriteJSONError(c, h.logger, err)
 		return
 	}
 
-	c.JSON(http.StatusOK, team)
+	c.JSON(http.StatusOK, t)
 }
