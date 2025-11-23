@@ -1,4 +1,4 @@
-package service
+package user
 
 import (
 	"context"
@@ -9,22 +9,22 @@ import (
 	"log/slog"
 )
 
-type UserService struct {
+type Service struct {
 	userRepo repository.UserRepository
 	log      *slog.Logger
 }
 
-func NewUserService(
+func NewService(
 	userRepo repository.UserRepository,
 	log *slog.Logger,
-) *UserService {
-	return &UserService{
+) *Service {
+	return &Service{
 		userRepo: userRepo,
 		log:      log,
 	}
 }
 
-func (s *UserService) SetUserIsActive(ctx context.Context, userID string, isActive bool) (*domain.User, error) {
+func (s *Service) SetUserIsActive(ctx context.Context, userID string, isActive bool) (*domain.User, error) {
 	err := s.userRepo.SetIsActive(ctx, userID, isActive)
 	if err != nil {
 		if errors.Is(err, repository.ErrUserNotFound) {
@@ -44,7 +44,7 @@ func (s *UserService) SetUserIsActive(ctx context.Context, userID string, isActi
 	return user, nil
 }
 
-func (s *UserService) GetPRsByUserID(ctx context.Context, userID string) ([]domain.PullRequestShort, error) {
+func (s *Service) GetPRsByUserID(ctx context.Context, userID string) ([]domain.PullRequestShort, error) {
 	// Check user existence
 	_, err := s.userRepo.GetByID(ctx, userID)
 	if err != nil {
