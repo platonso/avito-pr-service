@@ -1,6 +1,5 @@
 .vscode/
 .idea/
-.env
 *.log
 .DS_Store
 .dockerignore
