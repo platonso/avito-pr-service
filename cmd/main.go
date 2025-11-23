@@ -13,16 +13,20 @@ import (
 )
 
 func main() {
-	fmt.Println("start")
+	if err := run(); err != nil {
+		fmt.Fprintf(os.Stderr, "Error: %v\n", err)
+		os.Exit(1)
+	}
+}
 
+func run() error {
 	logger := slog.New(
 		slog.NewJSONHandler(os.Stdout, &slog.HandlerOptions{Level: slog.LevelInfo}),
 	)
 
 	cfg, err := config.New()
 	if err != nil {
-		logger.Error("failed to load config", slog.Any("error", err))
-		os.Exit(1)
+		return fmt.Errorf("failed to load config: %w", err)
 	}
 
 	ctx, cancel := context.WithCancel(context.Background())
@@ -30,14 +34,12 @@ func main() {
 
 	a, err := app.New(ctx, cfg, logger)
 	if err != nil {
-		logger.Error("failed to create app", slog.Any("error", err))
-		os.Exit(1)
+		return fmt.Errorf("failed to create app: %w", err)
 	}
 
 	sigChan := make(chan os.Signal, 1)
 	signal.Notify(sigChan, os.Interrupt, syscall.SIGTERM, syscall.SIGINT)
 
-	// Run server
 	errChan := make(chan error, 1)
 	go func() {
 		if err := a.Run(); err != nil {
@@ -45,7 +47,8 @@ func main() {
 		}
 	}()
 
-	// Catch the signal of completion or starting error
+	logger.Info("application started", slog.String("port", cfg.HTTPPort))
+
 	select {
 	case sig := <-sigChan:
 		logger.Info("received signal", slog.String("signal", sig.String()))
@@ -55,12 +58,13 @@ func main() {
 		cancel()
 	}
 
-	// Execute graceful shutdown
 	shutdownCtx, shutdownCancel := context.WithTimeout(context.Background(), 30*time.Second)
 	defer shutdownCancel()
 
 	if err := a.Shutdown(shutdownCtx); err != nil {
-		logger.Error("failed to shutdown gracefully", slog.Any("error", err))
-		os.Exit(1)
+		return fmt.Errorf("failed to shutdown gracefully: %w", err)
 	}
+
+	logger.Info("application stopped gracefully")
+	return nil
 }
