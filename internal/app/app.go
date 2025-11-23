@@ -3,6 +3,7 @@ package app
 import (
 	"context"
 	"database/sql"
+	"errors"
 	"fmt"
 	"github.com/gin-gonic/gin"
 	"github.com/jackc/pgx/v5/pgxpool"
@@ -13,13 +14,15 @@ import (
 	"github.com/platonso/avito-pr-service/internal/service"
 	"github.com/platonso/avito-pr-service/internal/transport/handlers"
 	"log/slog"
+	"net/http"
+	"time"
 )
 
 type App struct {
 	cfg    *config.Config
 	l      *slog.Logger
 	dbPool *pgxpool.Pool
-	router *gin.Engine
+	server *http.Server
 }
 
 func New(ctx context.Context, cfg *config.Config, l *slog.Logger) (*App, error) {
@@ -36,7 +39,14 @@ func New(ctx context.Context, cfg *config.Config, l *slog.Logger) (*App, error) 
 		return nil, err
 	}
 
-	a.setupRoutes()
+	router := a.setupRoutes()
+	a.server = &http.Server{
+		Addr:         ":" + a.cfg.HTTPPort,
+		Handler:      router,
+		ReadTimeout:  10 * time.Second,
+		WriteTimeout: 10 * time.Second,
+		IdleTimeout:  30 * time.Second,
+	}
 
 	return a, nil
 }
@@ -57,7 +67,7 @@ func (a *App) migrateDB() error {
 	return nil
 }
 
-func (a *App) setupRoutes() {
+func (a *App) setupRoutes() *gin.Engine {
 	teamRepo := postgres.NewTeamRepository(a.dbPool)
 	userRepo := postgres.NewUserRepository(a.dbPool)
 	prRepo := postgres.NewPRRepository(a.dbPool)
@@ -70,33 +80,63 @@ func (a *App) setupRoutes() {
 	userHandler := handlers.NewUserHandler(userService, a.l)
 	prHandler := handlers.NewPRHandler(prService, a.l)
 
-	a.router = gin.New()
-	a.router.Use(gin.Recovery())
+	router := gin.New()
+	router.Use(gin.Recovery())
 
-	team := a.router.Group("/team")
+	team := router.Group("/team")
 	team.POST("/add", teamHandler.CreateTeam)
 	team.GET("/get", teamHandler.GetTeam)
 
-	users := a.router.Group("/users")
+	users := router.Group("/users")
 	users.POST("/setIsActive", userHandler.SetIsActive)
 	users.GET("/getReview", userHandler.GetReview)
 
-	pullRequest := a.router.Group("/pullRequest")
+	pullRequest := router.Group("/pullRequest")
 	pullRequest.POST("/create", prHandler.CreatePR)
 	pullRequest.POST("/merge", prHandler.MergePR)
 	pullRequest.POST("/reassign", prHandler.ReassignReviewer)
 
-	stats := a.router.Group("/stats")
+	stats := router.Group("/stats")
 	stats.GET("/reviewers", prHandler.GetReviewerStats)
 	stats.GET("/pullRequests", prHandler.GetPRStats)
 
+	return router
 }
 
 func (a *App) Run() error {
-	return a.router.Run(":" + a.cfg.HTTPPort)
+	a.l.Info("starting server", slog.String("address", a.server.Addr))
+	if err := a.server.ListenAndServe(); err != nil && !errors.Is(err, http.ErrServerClosed) {
+		return fmt.Errorf("failed to start server: %w", err)
+	}
+	return nil
 }
 
 func (a *App) Shutdown(ctx context.Context) error {
-	a.dbPool.Close()
+	a.l.Info("shutting down server")
+
+	shutdownCtx, cancel := context.WithTimeout(ctx, 30*time.Second)
+	defer cancel()
+
+	var errs []error
+
+	// Graceful shutdown of HTTP server
+	if a.server != nil {
+		if err := a.server.Shutdown(shutdownCtx); err != nil {
+			errs = append(errs, fmt.Errorf("failed to shutdown server: %w", err))
+		} else {
+			a.l.Info("server shutdown completed")
+		}
+	}
+
+	// Close DB conn
+	if a.dbPool != nil {
+		a.dbPool.Close()
+		a.l.Info("database connections closed")
+	}
+
+	if len(errs) > 0 {
+		return fmt.Errorf("shutdown errors: %v", errs)
+	}
+
 	return nil
 }
