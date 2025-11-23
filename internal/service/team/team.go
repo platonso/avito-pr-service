@@ -1,4 +1,4 @@
-package service
+package team
 
 import (
 	"context"
@@ -9,22 +9,22 @@ import (
 	"log/slog"
 )
 
-type TeamService struct {
+type Service struct {
 	log      *slog.Logger
 	teamRepo repository.TeamRepository
 }
 
-func NewTeamService(
+func NewService(
 	teamRepo repository.TeamRepository,
 	log *slog.Logger,
-) *TeamService {
-	return &TeamService{
+) *Service {
+	return &Service{
 		teamRepo: teamRepo,
 		log:      log,
 	}
 }
 
-func (s *TeamService) CreateTeam(ctx context.Context, team *domain.Team) error {
+func (s *Service) CreateTeam(ctx context.Context, team *domain.Team) error {
 	// Validate unique users
 	userIDs := make(map[string]bool)
 	for _, member := range team.Members {
@@ -48,7 +48,7 @@ func (s *TeamService) CreateTeam(ctx context.Context, team *domain.Team) error {
 	return nil
 }
 
-func (s *TeamService) GetTeam(ctx context.Context, teamName string) (*domain.Team, error) {
+func (s *Service) GetTeam(ctx context.Context, teamName string) (*domain.Team, error) {
 	team, err := s.teamRepo.GetByName(ctx, teamName)
 	if err != nil {
 		if errors.Is(err, repository.ErrTeamNotFound) {
