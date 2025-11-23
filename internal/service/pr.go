@@ -199,7 +199,7 @@ func (s *PRService) getActiveTeamMembers(ctx context.Context, teamName string, e
 
 	var activeMembers []string
 	for _, member := range team.Members {
-		if member.IsActive && !excludeSet[member.ID] {
+		if *member.IsActive && !excludeSet[member.ID] {
 			activeMembers = append(activeMembers, member.ID)
 		}
 	}
@@ -263,6 +263,11 @@ func (s *PRService) GetReviewerAssignmentsStats(ctx context.Context) ([]domain.R
 		s.log.Error(err.Error())
 		return nil, fmt.Errorf("failed to get reviewer assignments stats: %w", err)
 	}
+
+	if stats == nil {
+		return []domain.ReviewerStat{}, err
+	}
+
 	return stats, nil
 }
 
@@ -272,5 +277,10 @@ func (s *PRService) GetPRStats(ctx context.Context) ([]domain.PullRequestStat, e
 		s.log.Error(err.Error())
 		return nil, fmt.Errorf("failed to get PR stats: %w", err)
 	}
+
+	if stats == nil {
+		return []domain.PullRequestStat{}, err
+	}
+
 	return stats, nil
 }

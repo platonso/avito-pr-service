@@ -70,7 +70,8 @@ func (a *App) setupRoutes() {
 	userHandler := handlers.NewUserHandler(userService, a.l)
 	prHandler := handlers.NewPRHandler(prService, a.l)
 
-	a.router = gin.Default()
+	a.router = gin.New()
+	a.router.Use(gin.Recovery())
 
 	team := a.router.Group("/team")
 	team.POST("/add", teamHandler.CreateTeam)

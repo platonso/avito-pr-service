@@ -13,7 +13,7 @@ type User struct {
 	ID       string `json:"user_id" binding:"required,min=1"`
 	Name     string `json:"username" binding:"required,min=1"`
 	TeamName string `json:"team_name" binding:"required,min=1"`
-	IsActive bool   `json:"is_active" binding:"required,min=1"`
+	IsActive *bool  `json:"is_active" binding:"required"`
 }
 
 type Team struct {
@@ -24,7 +24,7 @@ type Team struct {
 type TeamMember struct {
 	ID       string `json:"user_id" binding:"required,min=1"`
 	Name     string `json:"username" binding:"required,min=1"`
-	IsActive bool   `json:"is_active" binding:"required,min=1"`
+	IsActive *bool  `json:"is_active" binding:"required"`
 }
 
 type PullRequest struct {
